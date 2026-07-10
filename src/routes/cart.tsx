@@ -8,6 +8,21 @@ export const Route = createFileRoute("/cart")({ component: CartPage });
 
 function CartPage() {
   const { cart, isSignedIn, openLogin } = useShop();
+  if (!isSignedIn) {
+    return (
+      <section className="mx-auto max-w-2xl px-6 py-28 text-center">
+        <ShoppingBag className="mx-auto h-10 w-10 text-primary" />
+        <h1 className="mt-6 font-display text-4xl">Your bag is protected.</h1>
+        <p className="mt-3 text-muted-foreground">Sign in to view and continue with your order.</p>
+        <button
+          onClick={() => openLogin()}
+          className="mt-8 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background"
+        >
+          Sign in to view bag
+        </button>
+      </section>
+    );
+  }
   const lines = cart.flatMap((line) => {
     const product = findProduct(line.slug);
     return product ? [{ ...line, product }] : [];

@@ -9,16 +9,17 @@ import {
 } from "react";
 
 import { findProduct, type Product } from "@/lib/products";
+import { useAuth } from "@/lib/auth";
 
 type CartLine = { slug: string; quantity: number; photoName?: string };
 
 type ShopContextValue = {
   isSignedIn: boolean;
-  signIn: (email: string) => void;
   signOut: () => void;
   loginOpen: boolean;
   openLogin: (afterLogin?: () => void) => void;
   closeLogin: () => void;
+  completeLogin: () => void;
   wishlist: string[];
   toggleWishlist: (slug: string) => void;
   cart: CartLine[];
@@ -30,7 +31,7 @@ const STORAGE_KEY = "graphix-vibe-shop";
 
 export function ShopProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
+  const { signOut, user } = useAuth();
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -39,11 +40,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}") as {
-        email?: string;
         wishlist?: string[];
         cart?: CartLine[];
       };
-      setEmail(saved.email ?? null);
       setWishlist(saved.wishlist ?? []);
       setCart(saved.cart ?? []);
     } catch {
@@ -55,23 +54,19 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, wishlist, cart }));
-  }, [cart, email, ready, wishlist]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ wishlist, cart }));
+  }, [cart, ready, wishlist]);
 
   const openLogin = useCallback((action?: () => void) => {
     setAfterLogin(() => action);
     setLoginOpen(true);
   }, []);
 
-  const signIn = useCallback(
-    (nextEmail: string) => {
-      setEmail(nextEmail);
-      setLoginOpen(false);
-      afterLogin?.();
-      setAfterLogin(undefined);
-    },
-    [afterLogin],
-  );
+  const completeLogin = useCallback(() => {
+    setLoginOpen(false);
+    afterLogin?.();
+    setAfterLogin(undefined);
+  }, [afterLogin]);
 
   const toggleWishlist = useCallback((slug: string) => {
     setWishlist((items) =>
@@ -94,18 +89,20 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      isSignedIn: Boolean(email),
-      signIn,
-      signOut: () => setEmail(null),
+      isSignedIn: Boolean(user),
+      signOut: () => {
+        void signOut();
+      },
       loginOpen,
       openLogin,
       closeLogin: () => setLoginOpen(false),
+      completeLogin,
       wishlist,
       toggleWishlist,
       cart,
       addToCart,
     }),
-    [addToCart, cart, email, loginOpen, openLogin, signIn, toggleWishlist, wishlist],
+    [addToCart, cart, completeLogin, loginOpen, openLogin, signOut, toggleWishlist, user, wishlist],
   );
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

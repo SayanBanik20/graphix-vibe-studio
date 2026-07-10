@@ -2,17 +2,36 @@ import { useState, type FormEvent } from "react";
 import { Eye, EyeOff, LockKeyhole, Mail, X } from "lucide-react";
 
 import { useShop } from "@/lib/shop";
+import { useAuth } from "@/lib/auth";
 
 export function LoginDialog() {
-  const { closeLogin, loginOpen, signIn } = useShop();
+  const { closeLogin, completeLogin, loginOpen } = useShop();
+  const { resetPassword, signIn, signInWithGoogle, signUp } = useAuth();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   if (!loginOpen) return null;
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    signIn(email);
+    setMessage(null);
+    const { error } = await signIn(email, password);
+    if (error) return setMessage(error);
+    completeLogin();
+  }
+
+  async function register() {
+    setMessage(null);
+    const { error } = await signUp(email, password);
+    setMessage(error ?? "Account created. Check your email to confirm your account.");
+  }
+
+  async function forgotPassword() {
+    setMessage(null);
+    const { error } = await resetPassword(email);
+    setMessage(error ?? "Password reset instructions have been sent to your email.");
   }
 
   return (
@@ -28,6 +47,9 @@ export function LoginDialog() {
       >
         <button
           type="button"
+          onClick={() => {
+            void signInWithGoogle();
+          }}
           onClick={closeLogin}
           aria-label="Close sign in"
           className="absolute right-5 top-5 rounded-full p-2 hover:bg-muted"
@@ -71,6 +93,8 @@ export function LoginDialog() {
             <input
               required
               type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="Your password"
               className="w-full rounded-xl border border-border bg-background py-3 pl-11 pr-11 outline-none focus:border-primary"
             />
@@ -84,6 +108,20 @@ export function LoginDialog() {
             </button>
           </span>
         </label>
+        <button
+          type="button"
+          onClick={() => {
+            void forgotPassword();
+          }}
+          className="mt-3 block w-full text-right text-sm text-muted-foreground hover:text-foreground"
+        >
+          Forgot your password?
+        </button>
+        {message && (
+          <p role="status" className="mt-3 text-sm text-muted-foreground">
+            {message}
+          </p>
+        )}
         <button className="mt-7 w-full rounded-full bg-foreground px-5 py-3.5 font-medium text-background hover:opacity-90">
           Sign in
         </button>
@@ -91,6 +129,9 @@ export function LoginDialog() {
           New here?{" "}
           <button
             type="button"
+            onClick={() => {
+              void register();
+            }}
             className="font-medium text-foreground underline underline-offset-4"
           >
             Create an account

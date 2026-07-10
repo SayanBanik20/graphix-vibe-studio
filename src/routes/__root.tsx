@@ -15,6 +15,7 @@ import { SiteHeader } from "../components/site/SiteHeader";
 import { SiteFooter } from "../components/site/SiteFooter";
 import { LoginDialog } from "../components/site/LoginDialog";
 import { ShopProvider } from "../lib/shop";
+import { AuthProvider } from "../lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -124,16 +125,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <ShopProvider>
-        <div className="flex min-h-dvh flex-col">
-          <SiteHeader />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <SiteFooter />
-          <LoginDialog />
-        </div>
-      </ShopProvider>
+      <AuthProvider>
+        <ShopProvider>
+          <div className="flex min-h-dvh flex-col">
+            <SiteHeader />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <SiteFooter />
+            <LoginDialog />
+          </div>
+        </ShopProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

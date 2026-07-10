@@ -13,7 +13,7 @@ const nav = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const { cart, isSignedIn, openLogin, wishlist } = useShop();
+  const { cart, isSignedIn, openLogin, signOut, wishlist } = useShop();
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
@@ -79,10 +79,10 @@ export function SiteHeader() {
             )}
           </Link>
           <button
-            onClick={() => openLogin()}
+            onClick={() => (isSignedIn ? signOut() : openLogin())}
             className="hidden items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 md:inline-flex"
           >
-            <UserRound className="h-4 w-4" /> {isSignedIn ? "Account" : "Sign in"}
+            <UserRound className="h-4 w-4" /> {isSignedIn ? "Sign out" : "Sign in"}
           </button>
           <button
             aria-label="Menu"
