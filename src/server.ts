@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { subscribeToNewsletter } from "./lib/newsletter";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -47,6 +48,15 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/newsletter/subscribe" && request.method === "POST") {
+        const formData = await request.formData();
+        const email = String(formData.get("email") ?? "").trim();
+        const source = String(formData.get("source") ?? "").trim();
+        const result = await subscribeToNewsletter(email, source || undefined);
+        return Response.json(result, { status: result.ok ? 200 : 400 });
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
