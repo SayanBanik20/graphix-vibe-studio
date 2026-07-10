@@ -1,13 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, ShoppingBag } from "lucide-react";
 
-import { useShop, wishlistProducts } from "@/lib/shop";
+import { useShop } from "@/lib/shop";
+import { getProducts } from "@/lib/products";
 
-export const Route = createFileRoute("/wishlist")({ component: WishlistPage });
+export const Route = createFileRoute("/wishlist")({
+  loader: () => getProducts(),
+  component: WishlistPage,
+});
 
 function WishlistPage() {
   const { isSignedIn, openLogin, toggleWishlist, wishlist } = useShop();
-  const products = wishlistProducts(wishlist);
+  const products = Route.useLoaderData().filter((product) => wishlist.includes(product.slug));
 
   if (!isSignedIn) {
     return (

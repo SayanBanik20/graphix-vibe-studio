@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { findProduct, type Product } from "@/lib/products";
 import { useAuth } from "@/lib/auth";
 
 type CartLine = { slug: string; quantity: number; photoName?: string };
@@ -112,8 +111,4 @@ export function useShop() {
   const context = useContext(ShopContext);
   if (!context) throw new Error("useShop must be used inside ShopProvider");
   return context;
-}
-
-export function wishlistProducts(wishlist: string[]): Product[] {
-  return wishlist.map(findProduct).filter((product): product is Product => Boolean(product));
 }

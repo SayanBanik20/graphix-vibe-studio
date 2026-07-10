@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShoppingBag } from "lucide-react";
 
-import { findProduct } from "@/lib/products";
+import { getProducts } from "@/lib/products";
 import { useShop } from "@/lib/shop";
 
-export const Route = createFileRoute("/cart")({ component: CartPage });
+export const Route = createFileRoute("/cart")({ loader: () => getProducts(), component: CartPage });
 
 function CartPage() {
   const { cart, isSignedIn, openLogin } = useShop();
+  const products = Route.useLoaderData();
   if (!isSignedIn) {
     return (
       <section className="mx-auto max-w-2xl px-6 py-28 text-center">
@@ -24,7 +25,7 @@ function CartPage() {
     );
   }
   const lines = cart.flatMap((line) => {
-    const product = findProduct(line.slug);
+    const product = products.find((item) => item.slug === line.slug);
     return product ? [{ ...line, product }] : [];
   });
   const total = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);

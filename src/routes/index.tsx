@@ -11,9 +11,10 @@ import {
   Instagram,
 } from "lucide-react";
 import heroImg from "@/assets/hero-frame.jpg";
-import { products } from "@/lib/products";
+import { getProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
+  loader: () => getProducts(),
   head: () => ({
     meta: [
       { title: "Graphix Vibe — Handcrafted Gifts & Brand Design Studio, Mumbai" },
@@ -84,6 +85,7 @@ const testimonials = [
 ];
 
 function Home() {
+  const products = Route.useLoaderData();
   const featured = products.slice(0, 4);
   const [activeFeature, setActiveFeature] = useState(0);
   const featuredProduct = featured[activeFeature];

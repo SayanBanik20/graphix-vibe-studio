@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { products } from "@/lib/products";
+import { getProducts } from "@/lib/products";
 import { Star } from "lucide-react";
 
 export const Route = createFileRoute("/shop")({
+  loader: () => getProducts(),
   head: () => ({
     meta: [
       { title: "Shop — Personalized Gifts & Keepsakes | Graphix Vibe" },
@@ -31,6 +32,7 @@ const categories = [
 ] as const;
 
 function Shop() {
+  const products = Route.useLoaderData();
   const [active, setActive] = useState<(typeof categories)[number]>("All");
   const [sort, setSort] = useState<"featured" | "asc" | "desc">("featured");
   const [page, setPage] = useState(1);

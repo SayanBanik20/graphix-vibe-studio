@@ -12,7 +12,7 @@ import {
   Star,
   Upload,
 } from "lucide-react";
-import { findProduct, products } from "@/lib/products";
+import { getProductBySlug, getProducts } from "@/lib/products";
 import { useShop } from "@/lib/shop";
 
 const starterReviews = [
@@ -29,10 +29,11 @@ const starterReviews = [
 ];
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }) => {
-    const product = findProduct(params.slug);
+  loader: async ({ params }) => {
+    const product = await getProductBySlug(params.slug);
     if (!product) throw notFound();
-    return { product };
+    const catalog = await getProducts();
+    return { product, catalog };
   },
   head: ({ loaderData }) => {
     if (!loaderData)
@@ -72,7 +73,7 @@ export const Route = createFileRoute("/product/$slug")({
 });
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
+  const { product, catalog } = Route.useLoaderData();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -82,7 +83,7 @@ function ProductPage() {
   );
   const [reviewRating, setReviewRating] = useState(5);
   const { addToCart, isSignedIn, openLogin, toggleWishlist, wishlist } = useShop();
-  const related = products.filter((p) => p.slug !== product.slug).slice(0, 3);
+  const related = catalog.filter((p) => p.slug !== product.slug).slice(0, 3);
   const isWishlisted = wishlist.includes(product.slug);
   const reviews = [...(reviewsByProduct[product.slug] ?? []), ...starterReviews];
 
