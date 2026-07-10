@@ -48,6 +48,11 @@ export function SiteFooter() {
                 Wishlist
               </Link>
             </li>
+            <li>
+              <Link to="/orders" className="hover:text-primary">
+                Order history
+              </Link>
+            </li>
           </ul>
         </div>
         <div className="md:col-span-2">

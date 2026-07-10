@@ -50,10 +50,45 @@ function toProduct(row: ProductRow): Product {
     description: row.description,
     details: toDetails(row.details),
     requiresPhoto: row.requires_photo,
-    // Review aggregates will be provided by a database view in the next data phase.
     rating: 0,
     reviewCount: 0,
   };
+}
+
+type ReviewStats = {
+  rating: number;
+  reviewCount: number;
+};
+
+async function hydrateProductReviews(products: Product[]): Promise<Product[]> {
+  if (products.length === 0) return products;
+
+  const { data, error } = await getSupabaseClient()
+    .from("reviews")
+    .select("product_id, rating")
+    .eq("status", "published")
+    .in("product_id", products.map((product) => product.id));
+
+  if (error) throw error;
+
+  const statsByProductId = new Map<string, ReviewStats>();
+  for (const review of (data ?? []) as { product_id: string; rating: number }[]) {
+    const current = statsByProductId.get(review.product_id) ?? { rating: 0, reviewCount: 0 };
+    statsByProductId.set(review.product_id, {
+      rating: current.rating + review.rating,
+      reviewCount: current.reviewCount + 1,
+    });
+  }
+
+  return products.map((product) => {
+    const stats = statsByProductId.get(product.id);
+    if (!stats || stats.reviewCount === 0) return product;
+    return {
+      ...product,
+      rating: Number((stats.rating / stats.reviewCount).toFixed(1)),
+      reviewCount: stats.reviewCount,
+    };
+  });
 }
 
 const productFields =
@@ -67,7 +102,8 @@ export async function getProducts(): Promise<Product[]> {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data as ProductRow[]).map(toProduct);
+  const products = (data as ProductRow[]).map(toProduct);
+  return hydrateProductReviews(products);
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -78,5 +114,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     .maybeSingle();
 
   if (error) throw error;
-  return data ? toProduct(data as ProductRow) : null;
+  if (!data) return null;
+  const [product] = await hydrateProductReviews([toProduct(data as ProductRow)]);
+  return product ?? null;
 }

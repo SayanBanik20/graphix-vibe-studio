@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   Check,
   Minus,
@@ -12,8 +12,10 @@ import {
   Star,
   Upload,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 import { getProductBySlug, getProducts } from "@/lib/products";
 import { useShop } from "@/lib/shop";
+import { supabase } from "@/lib/supabase";
 
 const starterReviews = [
   {
@@ -27,6 +29,12 @@ const starterReviews = [
     text: "A thoughtful gift that arrived carefully packed and right on time.",
   },
 ];
+
+type ReviewEntry = {
+  name: string;
+  rating: number;
+  text: string;
+};
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
@@ -78,14 +86,95 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState<File | null>(null);
   const [tab, setTab] = useState<"description" | "reviews">("description");
-  const [reviewsByProduct, setReviewsByProduct] = useState<Record<string, typeof starterReviews>>(
-    {},
-  );
+  const [reviews, setReviews] = useState<ReviewEntry[]>(starterReviews);
   const [reviewRating, setReviewRating] = useState(5);
+  const [canReview, setCanReview] = useState(false);
+  const [reviewEligibilityChecked, setReviewEligibilityChecked] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
+  const { user } = useAuth();
   const { addToCart, isSignedIn, openLogin, toggleWishlist, wishlist } = useShop();
   const related = catalog.filter((p) => p.slug !== product.slug).slice(0, 3);
   const isWishlisted = wishlist.includes(product.slug);
-  const reviews = [...(reviewsByProduct[product.slug] ?? []), ...starterReviews];
+  const reviewCount = reviews.length;
+  const reviewAverage =
+    reviewCount > 0
+      ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount).toFixed(1))
+      : product.rating;
+
+  useEffect(() => {
+    setReviews(starterReviews);
+    setCanReview(false);
+    setReviewEligibilityChecked(false);
+    setReviewMessage(null);
+
+    if (!supabase || !user) return;
+
+    let active = true;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("rating, body")
+        .eq("product_id", product.id)
+        .eq("status", "published")
+        .order("created_at", { ascending: false });
+
+      if (!active) return;
+      if (error) return;
+
+      const persistedReviews = (data ?? []).map((review) => ({
+        name: "Verified buyer",
+        rating: review.rating,
+        text: review.body,
+      }));
+
+      setReviews([...persistedReviews, ...starterReviews]);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [product.id, user?.id]);
+
+  useEffect(() => {
+    if (!supabase || !user) {
+      setCanReview(false);
+      setReviewEligibilityChecked(false);
+      return;
+    }
+
+    let active = true;
+    setReviewEligibilityChecked(false);
+
+    void (async () => {
+      const { data: orders, error: ordersError } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "delivered");
+
+      if (!active) return;
+      if (ordersError || !orders?.length) {
+        setCanReview(false);
+        setReviewEligibilityChecked(true);
+        return;
+      }
+
+      const orderIds = orders.map((order) => order.id);
+      const { data: items, error: itemsError } = await supabase
+        .from("order_items")
+        .select("id")
+        .in("order_id", orderIds)
+        .eq("product_slug", product.slug);
+
+      if (!active) return;
+      setCanReview(!itemsError && Boolean(items?.length));
+      setReviewEligibilityChecked(true);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [product.slug, user?.id]);
 
   function withAccount(action: () => void) {
     if (isSignedIn) action();
@@ -96,20 +185,43 @@ function ProductPage() {
     setPhoto(event.target.files?.[0] ?? null);
   }
 
-  function addReview(event: FormEvent<HTMLFormElement>) {
+  async function addReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!isSignedIn) return openLogin();
+    if (!user || !supabase) {
+      setReviewMessage("Reviews will be available once Supabase is configured.");
+      return;
+    }
+    if (!canReview) {
+      setReviewMessage("Only buyers with a delivered order for this item can leave a review.");
+      return;
+    }
+
     const form = new FormData(event.currentTarget);
     const text = String(form.get("review") ?? "").trim();
-    if (!text) return;
-    setReviewsByProduct((current) => ({
-      ...current,
-      [product.slug]: [
-        { name: "You", rating: reviewRating, text },
-        ...(current[product.slug] ?? []),
-      ],
-    }));
+    if (text.length < 10) {
+      setReviewMessage("Please share at least 10 characters so your review is helpful.");
+      return;
+    }
+
+    setReviewMessage(null);
+    const { error } = await supabase.from("reviews").insert({
+      product_id: product.id,
+      user_id: user.id,
+      rating: reviewRating,
+      body: text,
+      status: "published",
+    });
+
+    if (error) {
+      setReviewMessage(error.message);
+      return;
+    }
+
+    setReviews((current) => [{ name: "You", rating: reviewRating, text }, ...current]);
+    setReviewMessage("Thanks for sharing your feedback.");
     event.currentTarget.reset();
+    setReviewRating(5);
   }
 
   function addProductToCart(goToCart = false) {
@@ -164,8 +276,8 @@ function ProductPage() {
             onClick={() => setTab("reviews")}
             className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
           >
-            <Star className="h-4 w-4 fill-primary text-primary" /> {product.rating.toFixed(1)} (
-            {product.reviewCount + reviews.length} reviews)
+            <Star className="h-4 w-4 fill-primary text-primary" /> {reviewAverage.toFixed(1)} (
+            {reviewCount} reviews)
           </button>
 
           <div className="mt-6 flex items-baseline gap-3">
@@ -296,7 +408,7 @@ function ProductPage() {
               onClick={() => setTab("reviews")}
               className={`px-6 py-4 text-sm font-medium ${tab === "reviews" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground"}`}
             >
-              Reviews ({product.reviewCount + reviews.length})
+              Reviews ({reviewCount})
             </button>
           </div>
           {tab === "description" ? (
@@ -322,7 +434,7 @@ function ProductPage() {
             <div className="grid gap-10 p-7 md:grid-cols-5 md:p-10">
               <div className="md:col-span-3">
                 <div className="flex items-center gap-3">
-                  <div className="font-display text-4xl">{product.rating.toFixed(1)}</div>
+                  <div className="font-display text-4xl">{reviewAverage.toFixed(1)}</div>
                   <div>
                     <div className="flex text-primary">
                       {Array.from({ length: 5 }).map((_, index) => (
@@ -330,7 +442,7 @@ function ProductPage() {
                       ))}
                     </div>
                     <div className="mt-1 text-sm text-muted-foreground">
-                      Based on {product.reviewCount + reviews.length} reviews
+                      Based on {reviewCount} reviews
                     </div>
                   </div>
                 </div>
@@ -382,9 +494,21 @@ function ProductPage() {
                     className="mt-2 w-full rounded-xl border border-border bg-background p-3 outline-none focus:border-primary"
                   />
                 </label>
-                <button className="mt-4 w-full rounded-full bg-foreground py-3 text-sm font-medium text-background">
-                  {isSignedIn ? "Post review" : "Sign in to review"}
+                <button
+                  disabled={!isSignedIn || !reviewEligibilityChecked || !canReview}
+                  className="mt-4 w-full rounded-full bg-foreground py-3 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {!isSignedIn
+                    ? "Sign in to review"
+                    : !reviewEligibilityChecked
+                      ? "Checking eligibility..."
+                      : canReview
+                        ? "Post review"
+                        : "Verified buyers only"}
                 </button>
+                {reviewMessage && (
+                  <p className="mt-3 text-sm text-muted-foreground">{reviewMessage}</p>
+                )}
               </form>
             </div>
           )}
