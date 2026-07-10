@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Mail, MapPin, Clock, Instagram, Send } from "lucide-react";
+
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -16,6 +18,34 @@ export const Route = createFileRoute("/contact")({
 
 function Contact() {
   const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus(null);
+
+    if (!supabase) {
+      setStatus("Contact form storage is unavailable until Supabase is configured.");
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const payload = {
+      name: String(form.get("name") ?? "").trim(),
+      email: String(form.get("email") ?? "").trim(),
+      project_type: String(form.get("project_type") ?? "").trim(),
+      message: String(form.get("message") ?? "").trim(),
+    };
+
+    const { error } = await supabase.from("contact_submissions").insert(payload);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    setSent(true);
+  }
+
   return (
     <div>
       <section className="mx-auto max-w-7xl px-6 pt-16 md:pt-24">
@@ -30,10 +60,7 @@ function Contact() {
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:grid-cols-5">
-        <form
-          onSubmit={(e) => { e.preventDefault(); setSent(true); }}
-          className="surface-panel md:col-span-3 p-8 md:p-12"
-        >
+        <form onSubmit={handleSubmit} className="surface-panel md:col-span-3 p-8 md:p-12">
           {sent ? (
             <div className="grid min-h-[300px] place-items-center text-center">
               <div>
@@ -51,16 +78,28 @@ function Contact() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block">
                   <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Your name</span>
-                  <input required className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  <input
+                    required
+                    name="name"
+                    className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                  />
                 </label>
                 <label className="block">
                   <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Email</span>
-                  <input required type="email" className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                  <input
+                    required
+                    type="email"
+                    name="email"
+                    className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                  />
                 </label>
               </div>
               <label className="block">
                 <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Project type</span>
-                <select className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary">
+                <select
+                  name="project_type"
+                  className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                >
                   <option>Personalized gift</option>
                   <option>Wedding / event</option>
                   <option>Brand identity</option>
@@ -71,11 +110,17 @@ function Contact() {
               </label>
               <label className="block">
                 <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Tell us more</span>
-                <textarea required rows={5} className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
+                <textarea
+                  required
+                  name="message"
+                  rows={5}
+                  className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                />
               </label>
               <button className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-8 py-4 text-sm font-medium text-background hover:opacity-90">
                 Send message <Send className="h-4 w-4" />
               </button>
+              {status && <p className="text-sm text-muted-foreground">{status}</p>}
             </div>
           )}
         </form>
