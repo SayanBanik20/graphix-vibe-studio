@@ -96,12 +96,21 @@ function CartPage() {
             <span className="font-display text-2xl">Total</span>
             <span className="font-display text-2xl">₹{total.toLocaleString("en-IN")}</span>
           </div>
-          <button
-            onClick={() => !isSignedIn && openLogin()}
-            className="mt-6 w-full rounded-full bg-foreground py-3.5 text-sm font-medium text-background"
-          >
-            {isSignedIn ? "Continue to checkout" : "Sign in to checkout"}
-          </button>
+          {isSignedIn ? (
+            <Link
+              to="/checkout"
+              className="mt-6 block w-full rounded-full bg-foreground py-3.5 text-center text-sm font-medium text-background"
+            >
+              Continue to checkout
+            </Link>
+          ) : (
+            <button
+              onClick={() => openLogin()}
+              className="mt-6 w-full rounded-full bg-foreground py-3.5 text-sm font-medium text-background"
+            >
+              Sign in to checkout
+            </button>
+          )}
         </div>
       )}
     </section>
