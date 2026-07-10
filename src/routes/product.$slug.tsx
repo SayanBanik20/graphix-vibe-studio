@@ -82,7 +82,7 @@ function ProductPage() {
           <p className="mt-8 max-w-lg text-muted-foreground">{product.description}</p>
 
           <ul className="mt-6 space-y-2 text-sm">
-            {product.details.map((d) => (
+            {product.details.map((d: string) => (
               <li key={d} className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {d}
               </li>
