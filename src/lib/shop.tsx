@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 type CartLine = { slug: string; quantity: number; photoName?: string };
 
@@ -44,7 +45,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         wishlist?: string[];
         cart?: CartLine[];
       };
-      setWishlist(saved.wishlist ?? []);
       setCart(saved.cart ?? []);
     } catch {
       // A blocked or malformed storage entry should not prevent shopping.
@@ -55,8 +55,32 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ wishlist, cart }));
-  }, [cart, ready, wishlist]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cart }));
+  }, [cart, ready]);
+
+  useEffect(() => {
+    if (!user || !supabase) {
+      setWishlist([]);
+      return;
+    }
+
+    let active = true;
+    supabase
+      .from("wishlist")
+      .select("products(slug)")
+      .eq("user_id", user.id)
+      .then(({ data, error }) => {
+        if (error || !active) return;
+        const slugs = (data as { products: { slug: string } | null }[])
+          .map((item) => item.products?.slug)
+          .filter((slug): slug is string => Boolean(slug));
+        setWishlist(slugs);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const openLogin = useCallback((action?: () => void) => {
     setAfterLogin(() => action);
@@ -69,11 +93,37 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     setAfterLogin(undefined);
   }, [afterLogin]);
 
-  const toggleWishlist = useCallback((slug: string) => {
-    setWishlist((items) =>
-      items.includes(slug) ? items.filter((item) => item !== slug) : [...items, slug],
-    );
-  }, []);
+  const toggleWishlist = useCallback(
+    (slug: string) => {
+      if (!user || !supabase) return;
+
+      const isSaved = wishlist.includes(slug);
+      setWishlist((items) => (isSaved ? items.filter((item) => item !== slug) : [...items, slug]));
+
+      void (async () => {
+        const { data: product, error: productError } = await supabase
+          .from("products")
+          .select("id")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (productError || !product) throw productError ?? new Error("Product not found");
+
+        const { error } = isSaved
+          ? await supabase
+              .from("wishlist")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("product_id", product.id)
+          : await supabase.from("wishlist").insert({ user_id: user.id, product_id: product.id });
+        if (error) throw error;
+      })().catch(() => {
+        setWishlist((items) =>
+          isSaved ? [...items, slug] : items.filter((item) => item !== slug),
+        );
+      });
+    },
+    [user, wishlist],
+  );
 
   const addToCart = useCallback((slug: string, quantity: number, photoName?: string) => {
     setCart((lines) => {
