@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShoppingBag } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 import { getProducts } from "@/lib/products";
 import { useShop } from "@/lib/shop";
@@ -7,7 +7,7 @@ import { useShop } from "@/lib/shop";
 export const Route = createFileRoute("/cart")({ loader: () => getProducts(), component: CartPage });
 
 function CartPage() {
-  const { cart, isSignedIn, openLogin } = useShop();
+  const { cart, isSignedIn, openLogin, removeFromCart, updateCartQuantity } = useShop();
   const products = Route.useLoaderData();
   if (!isSignedIn) {
     return (
@@ -56,13 +56,38 @@ function CartPage() {
                 <img src={product.image} alt="" className="h-20 w-20 rounded-xl object-cover" />
                 <div className="flex-1">
                   <div className="font-display text-lg">{product.name}</div>
-                  <div className="text-sm text-muted-foreground">Quantity: {quantity}</div>
+                  <div className="mt-2 inline-flex items-center rounded-full border border-border">
+                    <button
+                      onClick={() => updateCartQuantity(product.slug, photoName, quantity - 1)}
+                      aria-label={`Decrease ${product.name} quantity`}
+                      className="grid h-8 w-8 place-items-center rounded-full hover:bg-muted"
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+                    <button
+                      onClick={() => updateCartQuantity(product.slug, photoName, quantity + 1)}
+                      aria-label={`Increase ${product.name} quantity`}
+                      className="grid h-8 w-8 place-items-center rounded-full hover:bg-muted"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                   {photoName && (
                     <div className="text-xs text-primary">Photo attached: {photoName}</div>
                   )}
                 </div>
-                <div className="font-medium">
-                  ₹{(product.price * quantity).toLocaleString("en-IN")}
+                <div className="text-right">
+                  <div className="font-medium">
+                    ₹{(product.price * quantity).toLocaleString("en-IN")}
+                  </div>
+                  <button
+                    onClick={() => removeFromCart(product.slug, photoName)}
+                    aria-label={`Remove ${product.name} from bag`}
+                    className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Remove
+                  </button>
                 </div>
               </div>
             ))}

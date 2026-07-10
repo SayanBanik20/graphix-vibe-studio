@@ -23,6 +23,8 @@ type ShopContextValue = {
   toggleWishlist: (slug: string) => void;
   cart: CartLine[];
   addToCart: (slug: string, quantity: number, photoName?: string) => void;
+  updateCartQuantity: (slug: string, photoName: string | undefined, quantity: number) => void;
+  removeFromCart: (slug: string, photoName?: string) => void;
 };
 
 const ShopContext = createContext<ShopContextValue | null>(null);
@@ -86,6 +88,23 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateCartQuantity = useCallback(
+    (slug: string, photoName: string | undefined, quantity: number) => {
+      setCart((lines) =>
+        quantity <= 0
+          ? lines.filter((line) => line.slug !== slug || line.photoName !== photoName)
+          : lines.map((line) =>
+              line.slug === slug && line.photoName === photoName ? { ...line, quantity } : line,
+            ),
+      );
+    },
+    [],
+  );
+
+  const removeFromCart = useCallback((slug: string, photoName?: string) => {
+    setCart((lines) => lines.filter((line) => line.slug !== slug || line.photoName !== photoName));
+  }, []);
+
   const value = useMemo(
     () => ({
       isSignedIn: Boolean(user),
@@ -100,8 +119,22 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       toggleWishlist,
       cart,
       addToCart,
+      updateCartQuantity,
+      removeFromCart,
     }),
-    [addToCart, cart, completeLogin, loginOpen, openLogin, signOut, toggleWishlist, user, wishlist],
+    [
+      addToCart,
+      cart,
+      completeLogin,
+      loginOpen,
+      openLogin,
+      removeFromCart,
+      signOut,
+      toggleWishlist,
+      updateCartQuantity,
+      user,
+      wishlist,
+    ],
   );
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
