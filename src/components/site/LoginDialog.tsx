@@ -24,8 +24,10 @@ export function LoginDialog() {
 
   async function register() {
     setMessage(null);
-    const { error } = await signUp(email, password);
-    setMessage(error ?? "Account created. Check your email to confirm your account.");
+    const { error, session } = await signUp(email, password);
+    if (error) return setMessage(error);
+    if (session) completeLogin();
+    else setMessage("Account created. Check your email to confirm your account.");
   }
 
   async function forgotPassword() {
@@ -47,9 +49,6 @@ export function LoginDialog() {
       >
         <button
           type="button"
-          onClick={() => {
-            void signInWithGoogle();
-          }}
           onClick={closeLogin}
           aria-label="Close sign in"
           className="absolute right-5 top-5 rounded-full p-2 hover:bg-muted"
@@ -62,6 +61,9 @@ export function LoginDialog() {
         <p className="mt-1 text-muted-foreground">Sign in to save favorites and place orders.</p>
         <button
           type="button"
+          onClick={() => {
+            void signInWithGoogle();
+          }}
           className="mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-foreground px-5 py-3.5 text-sm font-medium text-background hover:opacity-90"
         >
           <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-sm font-bold text-primary">

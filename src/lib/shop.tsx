@@ -11,7 +11,21 @@ import {
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
-type CartLine = { slug: string; quantity: number; photoName?: string };
+type CartAttachment = {
+  fileName: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  storagePath: string | null;
+  publicUrl: string | null;
+};
+
+type CartLine = {
+  slug: string;
+  quantity: number;
+  photoName?: string;
+  productId?: string;
+  attachments?: CartAttachment[];
+};
 
 type ShopContextValue = {
   isSignedIn: boolean;
@@ -23,9 +37,20 @@ type ShopContextValue = {
   wishlist: string[];
   toggleWishlist: (slug: string) => void;
   cart: CartLine[];
-  addToCart: (slug: string, quantity: number, photoName?: string) => void;
-  updateCartQuantity: (slug: string, photoName: string | undefined, quantity: number) => void;
-  removeFromCart: (slug: string, photoName?: string) => void;
+  addToCart: (
+    slug: string,
+    quantity: number,
+    photoName?: string,
+    attachments?: CartAttachment[],
+    productId?: string,
+  ) => void;
+  updateCartQuantity: (
+    slug: string,
+    photoName: string | undefined,
+    quantity: number,
+    productId?: string,
+  ) => void;
+  removeFromCart: (slug: string, photoName?: string, productId?: string) => void;
 };
 
 const ShopContext = createContext<ShopContextValue | null>(null);
@@ -125,34 +150,84 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [user, wishlist],
   );
 
-  const addToCart = useCallback((slug: string, quantity: number, photoName?: string) => {
-    setCart((lines) => {
-      const existing = lines.find((line) => line.slug === slug && line.photoName === photoName);
-      return existing
-        ? lines.map((line) =>
-            line.slug === slug && line.photoName === photoName
-              ? { ...line, quantity: line.quantity + quantity }
-              : line,
-          )
-        : [...lines, { slug, quantity, photoName }];
-    });
-  }, []);
+  const addToCart = useCallback(
+    (
+      slug: string,
+      quantity: number,
+      photoName?: string,
+      attachments?: CartAttachment[],
+      productId?: string,
+    ) => {
+      setCart((lines) => {
+        const existing = lines.find(
+          (line) =>
+            line.slug === slug &&
+            line.productId === productId &&
+            (line.photoName ?? "") === (photoName ?? ""),
+        );
+        return existing
+          ? lines.map((line) =>
+              line.slug === slug &&
+              line.productId === productId &&
+              (line.photoName ?? "") === (photoName ?? "")
+                ? { ...line, quantity: line.quantity + quantity }
+                : line,
+            )
+          : [...lines, { slug, quantity, photoName, productId, attachments }];
+      });
+
+      if (!user || !supabase || !attachments?.length) return;
+      void (async () => {
+        const cartKey = `${slug}-${productId ?? "standard"}-${Date.now()}`;
+        const { error } = await supabase.from("product_uploads").insert(
+          attachments.map((attachment) => ({
+            product_id: productId,
+            cart_item_key: cartKey,
+            uploaded_by: user.id,
+            file_name: attachment.fileName,
+            storage_path: attachment.storagePath,
+            public_url: attachment.publicUrl,
+            mime_type: attachment.mimeType,
+            size_bytes: attachment.sizeBytes,
+          })),
+        );
+        if (error) throw error;
+      })().catch(() => undefined);
+    },
+    [user],
+  );
 
   const updateCartQuantity = useCallback(
-    (slug: string, photoName: string | undefined, quantity: number) => {
+    (slug: string, photoName: string | undefined, quantity: number, productId?: string) => {
       setCart((lines) =>
         quantity <= 0
-          ? lines.filter((line) => line.slug !== slug || line.photoName !== photoName)
+          ? lines.filter(
+              (line) =>
+                line.slug !== slug ||
+                line.productId !== productId ||
+                (line.photoName ?? "") !== (photoName ?? ""),
+            )
           : lines.map((line) =>
-              line.slug === slug && line.photoName === photoName ? { ...line, quantity } : line,
+              line.slug === slug &&
+              line.productId === productId &&
+              (line.photoName ?? "") === (photoName ?? "")
+                ? { ...line, quantity }
+                : line,
             ),
       );
     },
     [],
   );
 
-  const removeFromCart = useCallback((slug: string, photoName?: string) => {
-    setCart((lines) => lines.filter((line) => line.slug !== slug || line.photoName !== photoName));
+  const removeFromCart = useCallback((slug: string, photoName?: string, productId?: string) => {
+    setCart((lines) =>
+      lines.filter(
+        (line) =>
+          line.slug !== slug ||
+          line.productId !== productId ||
+          (line.photoName ?? "") !== (photoName ?? ""),
+      ),
+    );
   }, []);
 
   const value = useMemo(

@@ -4,6 +4,9 @@ import { getProducts } from "@/lib/products";
 import { Star } from "lucide-react";
 
 export const Route = createFileRoute("/shop")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+  }),
   loader: () => getProducts(),
   head: () => ({
     meta: [
@@ -33,16 +36,26 @@ const categories = [
 
 function Shop() {
   const products = Route.useLoaderData();
+  const search = Route.useSearch();
   const [active, setActive] = useState<(typeof categories)[number]>("All");
   const [sort, setSort] = useState<"featured" | "asc" | "desc">("featured");
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
+    const query = search.q.trim().toLowerCase();
     let list = active === "All" ? products : products.filter((p) => p.category === active);
+
+    if (query) {
+      list = list.filter((product) => {
+        const haystack = `${product.name} ${product.tagline ?? ""} ${product.category ?? ""}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
     if (sort === "asc") list = [...list].sort((a, b) => a.price - b.price);
     if (sort === "desc") list = [...list].sort((a, b) => b.price - a.price);
     return list;
-  }, [active, sort]);
+  }, [active, products, search.q, sort]);
   const pageSize = 6;
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const displayedProducts = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -50,7 +63,7 @@ function Shop() {
   return (
     <div>
       <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+        <div className="site-container py-16 md:py-24">
           <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">The Shop</div>
           <h1 className="mt-3 max-w-3xl font-display text-5xl leading-[1.05] tracking-tight md:text-6xl">
             Everyday <em className="font-normal text-gradient">heirlooms</em>, made by hand.
@@ -62,7 +75,7 @@ function Shop() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-12">
+      <section className="site-container py-12">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             {categories.map((c) => (

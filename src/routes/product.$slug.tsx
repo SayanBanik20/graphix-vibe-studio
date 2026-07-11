@@ -84,7 +84,7 @@ function ProductPage() {
   const { product, catalog } = Route.useLoaderData();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
-  const [photo, setPhoto] = useState<File | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [tab, setTab] = useState<"description" | "reviews">("description");
   const [reviews, setReviews] = useState<ReviewEntry[]>(starterReviews);
   const [reviewRating, setReviewRating] = useState(5);
@@ -181,8 +181,25 @@ function ProductPage() {
     else openLogin(action);
   }
 
-  function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
-    setPhoto(event.target.files?.[0] ?? null);
+  const maxAllowedPhotos = product.maxPhotoCount > 0 ? product.maxPhotoCount : 1;
+  const minRequiredPhotos = product.requiresPhoto ? Math.max(1, product.minPhotoCount) : 0;
+  const uploadLabel = product.photoUploadLabel ?? "Upload your photo";
+  const uploadDescription =
+    product.photoUploadDescription ??
+    (maxAllowedPhotos > 1
+      ? "Share the images you want us to personalize."
+      : "One clear image is required to personalize this piece.");
+  const uploadSummary = `${photos.length}/${maxAllowedPhotos} ${maxAllowedPhotos === 1 ? "image" : "images"} uploaded`;
+  const uploadValidationMessage = product.requiresPhoto
+    ? photos.length < minRequiredPhotos
+      ? `Minimum ${minRequiredPhotos} image${minRequiredPhotos === 1 ? "" : "s"} required`
+      : null
+    : null;
+  const canProceedWithUploads = !product.requiresPhoto || photos.length >= minRequiredPhotos;
+
+  function selectPhotos(event: ChangeEvent<HTMLInputElement>) {
+    const nextFiles = Array.from(event.target.files ?? []);
+    setPhotos(nextFiles.slice(0, maxAllowedPhotos));
   }
 
   async function addReview(event: FormEvent<HTMLFormElement>) {
@@ -225,16 +242,29 @@ function ProductPage() {
   }
 
   function addProductToCart(goToCart = false) {
-    if (product.requiresPhoto && !photo) return;
+    if (!canProceedWithUploads) return;
     withAccount(() => {
-      addToCart(product.slug, qty, photo?.name);
+      const attachments = photos.map((file) => ({
+        fileName: file.name,
+        mimeType: file.type || null,
+        sizeBytes: file.size || null,
+        storagePath: `local/${file.name}`,
+        publicUrl: null,
+      }));
+      addToCart(
+        product.slug,
+        qty,
+        attachments.length > 0 ? attachments.map((item) => item.fileName).join(", ") : undefined,
+        attachments,
+        product.id,
+      );
       if (goToCart) navigate({ to: "/cart" });
     });
   }
 
   return (
     <div>
-      <div className="mx-auto max-w-7xl px-6 pt-8 text-xs text-muted-foreground">
+      <div className="site-container pt-8 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground">
           Home
         </Link>
@@ -246,7 +276,7 @@ function ProductPage() {
         <span className="text-foreground">{product.name}</span>
       </div>
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-10 md:grid-cols-2 md:py-16">
+      <section className="site-container grid gap-12 py-10 md:grid-cols-2 md:py-16">
         <div className="relative">
           <div className="overflow-hidden rounded-[2rem] border border-border bg-muted shadow-soft">
             <img
@@ -309,26 +339,30 @@ function ProductPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="font-display text-xl">
-                    Upload your photo <span className="text-primary">*</span>
+                    {uploadLabel} <span className="text-primary">*</span>
                   </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    One clear image is required to personalize this piece.
-                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{uploadDescription}</p>
                 </div>
+                <div className="text-sm text-muted-foreground">{uploadSummary}</div>
               </div>
               <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary bg-background px-4 py-4 text-sm font-medium hover:bg-muted">
-                <Upload className="h-4 w-4" /> {photo ? photo.name : "Upload one photo"}
+                <Upload className="h-4 w-4" />
+                {photos.length > 0 ? `${photos.length} selected` : `Upload up to ${maxAllowedPhotos} images`}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
-                  onChange={selectPhoto}
+                  multiple={maxAllowedPhotos > 1}
+                  onChange={selectPhotos}
                   className="sr-only"
                 />
               </label>
-              {!photo && (
-                <p className="mt-2 text-xs text-destructive">
-                  Please upload a photo before adding this item to your bag.
-                </p>
+              {photos.length > 0 && (
+                <div className="mt-3 rounded-xl bg-background/70 p-3 text-xs text-muted-foreground">
+                  {photos.map((file) => file.name).join(", ")}
+                </div>
+              )}
+              {uploadValidationMessage && (
+                <p className="mt-2 text-xs text-destructive">{uploadValidationMessage}</p>
               )}
             </div>
           )}
@@ -353,13 +387,15 @@ function ProductPage() {
             </div>
             <button
               onClick={() => addProductToCart()}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-foreground px-8 py-4 text-sm font-medium text-background hover:opacity-90 sm:flex-none"
+              disabled={!canProceedWithUploads}
+              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-foreground px-8 py-4 text-sm font-medium text-background hover:opacity-90 sm:flex-none ${!canProceedWithUploads ? "cursor-not-allowed opacity-60" : ""}`}
             >
               Add to cart · ₹{(product.price * qty).toLocaleString("en-IN")}
             </button>
             <button
               onClick={() => addProductToCart(true)}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-medium text-primary-foreground hover:opacity-90 sm:flex-none"
+              disabled={!canProceedWithUploads}
+              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-medium text-primary-foreground hover:opacity-90 sm:flex-none ${!canProceedWithUploads ? "cursor-not-allowed opacity-60" : ""}`}
             >
               Buy now
             </button>
@@ -395,7 +431,7 @@ function ProductPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pb-8">
+      <section className="site-container pb-8">
         <div className="overflow-hidden rounded-3xl border border-border">
           <div className="flex border-b border-border">
             <button
@@ -515,7 +551,7 @@ function ProductPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-16">
+      <section className="site-container py-16">
         <div className="flex items-end justify-between">
           <h2 className="font-display text-3xl md:text-4xl">You may also love</h2>
           <Link to="/shop" className="text-sm font-medium hover:text-primary">

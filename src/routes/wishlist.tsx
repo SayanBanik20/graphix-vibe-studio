@@ -32,7 +32,7 @@ function WishlistPage() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+    <section className="site-container py-16 md:py-24">
       <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
         Saved for later
       </div>

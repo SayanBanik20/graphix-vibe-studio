@@ -99,6 +99,13 @@
   }
 }
 
+@utility site-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1500px;
+  padding-inline: clamp(1.5rem, 3.5vw, 4rem);
+}
+
 @utility text-gradient {
   background: var(--gradient-brand);
   -webkit-background-clip: text;

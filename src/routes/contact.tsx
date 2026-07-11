@@ -48,7 +48,7 @@ function Contact() {
 
   return (
     <div>
-      <section className="mx-auto max-w-7xl px-6 pt-16 md:pt-24">
+      <section className="site-container pt-16 md:pt-24">
         <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Say Hello</div>
         <h1 className="mt-3 max-w-3xl font-display text-5xl leading-[1.05] tracking-tight md:text-7xl">
           Let's make <em className="font-normal text-gradient">something</em> together.
@@ -59,7 +59,7 @@ function Contact() {
         </p>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:grid-cols-5">
+      <section className="site-container grid gap-12 py-20 md:grid-cols-5">
         <form onSubmit={handleSubmit} className="surface-panel md:col-span-3 p-8 md:p-12">
           {sent ? (
             <div className="grid min-h-[300px] place-items-center text-center">

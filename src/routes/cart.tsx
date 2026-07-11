@@ -31,7 +31,7 @@ function CartPage() {
   const total = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-16 md:py-24">
+    <section className="site-container py-16 md:py-24">
       <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Your order</div>
       <h1 className="mt-3 font-display text-5xl tracking-tight">Shopping bag</h1>
       {lines.length === 0 ? (
@@ -48,7 +48,7 @@ function CartPage() {
       ) : (
         <div className="mt-10 rounded-3xl border border-border p-6 sm:p-8">
           <div className="space-y-5">
-            {lines.map(({ product, quantity, photoName }) => (
+            {lines.map(({ product, quantity, photoName, attachments }) => (
               <div
                 key={`${product.slug}-${photoName ?? "standard"}`}
                 className="flex items-center gap-4"
@@ -73,8 +73,12 @@ function CartPage() {
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  {photoName && (
-                    <div className="text-xs text-primary">Photo attached: {photoName}</div>
+                  {(photoName || attachments?.length) && (
+                    <div className="text-xs text-primary">
+                      {attachments?.length
+                        ? `${attachments.length} attachment${attachments.length === 1 ? "" : "s"} selected: ${attachments.map((item) => item.fileName).join(", ")}`
+                        : `Photo attached: ${photoName}`}
+                    </div>
                   )}
                 </div>
                 <div className="text-right">

@@ -12,6 +12,10 @@ export type Product = {
   description: string;
   details: string[];
   requiresPhoto: boolean;
+  minPhotoCount: number;
+  maxPhotoCount: number;
+  photoUploadLabel: string | null;
+  photoUploadDescription: string | null;
   rating: number;
   reviewCount: number;
   badge?: string;
@@ -27,7 +31,11 @@ type ProductRow = {
   compare_at_price_inr: number | null;
   main_image_url: string | null;
   details: unknown;
-  requires_photo: boolean;
+  requires_photo?: boolean;
+  min_photo_count?: number | null;
+  max_photo_count?: number | null;
+  photo_upload_label?: string | null;
+  photo_upload_description?: string | null;
   categories: { name: string } | null;
 };
 
@@ -49,10 +57,19 @@ function toProduct(row: ProductRow): Product {
     image: row.main_image_url ?? "/favicon.ico",
     description: row.description,
     details: toDetails(row.details),
-    requiresPhoto: row.requires_photo,
+    requiresPhoto: Boolean(row.requires_photo),
+    minPhotoCount: Number(row.min_photo_count ?? 0),
+    maxPhotoCount: Number(row.max_photo_count ?? 0),
+    photoUploadLabel: row.photo_upload_label ?? null,
+    photoUploadDescription: row.photo_upload_description ?? null,
     rating: 0,
     reviewCount: 0,
   };
+}
+
+function isMissingColumnError(error: { message?: string } | null | undefined): boolean {
+  const message = error?.message?.toLowerCase() ?? "";
+  return Boolean(message) && /does not exist|column .* not exist|missing column|could not find/i.test(message);
 }
 
 type ReviewStats = {
@@ -69,7 +86,7 @@ async function hydrateProductReviews(products: Product[]): Promise<Product[]> {
     .eq("status", "published")
     .in("product_id", products.map((product) => product.id));
 
-  if (error) throw error;
+  if (error) return products;
 
   const statsByProductId = new Map<string, ReviewStats>();
   for (const review of (data ?? []) as { product_id: string; rating: number }[]) {
@@ -92,14 +109,39 @@ async function hydrateProductReviews(products: Product[]): Promise<Product[]> {
 }
 
 const productFields =
+  "id, slug, name, tagline, description, price_inr, compare_at_price_inr, main_image_url, details, requires_photo, min_photo_count, max_photo_count, photo_upload_label, photo_upload_description, categories(name)";
+const legacyProductFields =
   "id, slug, name, tagline, description, price_inr, compare_at_price_inr, main_image_url, details, requires_photo, categories(name)";
 
+async function fetchProductsWithFallback(selectFields: string, slug?: string) {
+  const query = getSupabaseClient().from("products").select(selectFields);
+  const response = slug
+    ? await query.eq("slug", slug).maybeSingle()
+    : await query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
+
+  if (!slug && response.error && isMissingColumnError(response.error)) {
+    const fallback = await getSupabaseClient()
+      .from("products")
+      .select(legacyProductFields)
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false });
+    return fallback;
+  }
+
+  if (slug && response.error && isMissingColumnError(response.error)) {
+    const fallback = await getSupabaseClient()
+      .from("products")
+      .select(legacyProductFields)
+      .eq("slug", slug)
+      .maybeSingle();
+    return fallback;
+  }
+
+  return response;
+}
+
 export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await getSupabaseClient()
-    .from("products")
-    .select(productFields)
-    .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false });
+  const { data, error } = await fetchProductsWithFallback(productFields);
 
   if (error) throw error;
   const products = (data as ProductRow[]).map(toProduct);
@@ -107,11 +149,7 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const { data, error } = await getSupabaseClient()
-    .from("products")
-    .select(productFields)
-    .eq("slug", slug)
-    .maybeSingle();
+  const { data, error } = await fetchProductsWithFallback(productFields, slug);
 
   if (error) throw error;
   if (!data) return null;

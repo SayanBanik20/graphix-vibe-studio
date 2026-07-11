@@ -24,7 +24,7 @@ const timeline = [
 function About() {
   return (
     <div>
-      <section className="mx-auto max-w-7xl px-6 pt-16 md:pt-24">
+      <section className="site-container pt-16 md:pt-24">
         <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">The Studio</div>
         <h1 className="mt-3 max-w-4xl font-display text-5xl leading-[1.05] tracking-tight md:text-7xl">
           Design as a form of <em className="font-normal text-gradient">generosity</em>.
@@ -35,7 +35,7 @@ function About() {
         </p>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:grid-cols-5 md:items-center">
+      <section className="site-container grid gap-12 py-20 md:grid-cols-5 md:items-center">
         <div className="md:col-span-2">
           <div className="overflow-hidden rounded-[2rem] border border-border shadow-soft">
             <img src={founder} alt="Manasvi Goklani, founder of Graphix Vibe" width={1000} height={1200} className="w-full object-cover" loading="lazy" />
@@ -66,7 +66,7 @@ function About() {
       </section>
 
       <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-6 py-24">
+        <div className="site-container py-24">
           <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Milestones</div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">Four years, one obsession.</h2>
           <div className="mt-12 grid gap-6 md:grid-cols-4">

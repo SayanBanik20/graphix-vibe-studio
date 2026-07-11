@@ -4,7 +4,7 @@ import { Instagram, Mail, MapPin, Phone } from "lucide-react";
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-border bg-surface">
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-12">
+      <div className="site-container grid gap-12 py-16 md:grid-cols-12">
         <div className="md:col-span-4">
           <div className="font-display text-4xl font-semibold tracking-tight">Graphix Vibe</div>
           <div className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
@@ -107,7 +107,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-6 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="site-container flex flex-col gap-2 py-6 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} Graphix Vibe. All rights reserved.</span>
           <span>Secure checkout · Made with intention</span>
         </div>

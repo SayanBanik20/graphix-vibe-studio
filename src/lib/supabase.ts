@@ -19,3 +19,8 @@ export function getSupabaseClient(): SupabaseClient {
 
   return supabase;
 }
+
+export function getAuthRedirectUrl(path = "/auth/callback"): string {
+  if (typeof window === "undefined") return "http://localhost:3000" + path;
+  return new URL(path, window.location.origin).toString();
+}

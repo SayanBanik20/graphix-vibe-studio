@@ -109,7 +109,7 @@ function Home() {
           aria-hidden
           className="pointer-events-none absolute -right-24 top-64 h-96 w-96 rounded-full bg-accent/25 blur-3xl"
         />
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-24 pt-16 md:grid-cols-2 md:pb-32 md:pt-24">
+        <div className="site-container grid items-center gap-12 pb-24 pt-16 md:grid-cols-2 md:pb-32 md:pt-24">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-4 py-1.5 text-xs uppercase tracking-[0.22em] text-muted-foreground backdrop-blur">
               <Sparkles className="h-3.5 w-3.5 text-primary" /> Est. Mumbai · 1000+ delivered
@@ -192,7 +192,7 @@ function Home() {
       </section>
 
       {/* Featured products */}
-      <section className="mx-auto max-w-7xl px-6 py-24">
+      <section className="site-container py-24">
         <div className="flex items-end justify-between gap-6">
           <div>
             <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
@@ -258,7 +258,7 @@ function Home() {
 
       {/* Services */}
       <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-6 py-24">
+        <div className="site-container py-24">
           <div className="grid gap-12 md:grid-cols-2 md:items-end">
             <div>
               <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
@@ -292,7 +292,7 @@ function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="mx-auto max-w-7xl px-6 py-24">
+      <section className="site-container py-24">
         <div className="max-w-2xl">
           <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
             Kind Words
@@ -322,7 +322,7 @@ function Home() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-7xl px-6 pb-24">
+      <section className="site-container pb-24">
         <div className="relative overflow-hidden rounded-[2rem] bg-foreground p-12 text-background md:p-20">
           <div
             aria-hidden

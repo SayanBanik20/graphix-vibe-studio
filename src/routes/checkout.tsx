@@ -126,7 +126,7 @@ function CheckoutPage() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+    <section className="site-container py-16 md:py-24">
       <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Checkout</div>
       <h1 className="mt-3 font-display text-5xl tracking-tight">Almost yours.</h1>
       <div className="mt-12 grid gap-10 lg:grid-cols-5">
@@ -246,14 +246,18 @@ function CheckoutPage() {
         <aside className="h-fit rounded-3xl border border-border bg-surface p-6 sm:p-8 lg:col-span-2">
           <h2 className="font-display text-2xl">Order summary</h2>
           <div className="mt-6 space-y-4">
-            {lines.map(({ product, quantity, photoName }) => (
+            {lines.map(({ product, quantity, photoName, attachments }) => (
               <div key={`${product.slug}-${photoName ?? "standard"}`} className="flex gap-3">
                 <img src={product.image} alt="" className="h-14 w-14 rounded-xl object-cover" />
                 <div className="flex-1 text-sm">
                   <div className="font-medium">{product.name}</div>
                   <div className="mt-1 text-muted-foreground">
                     Qty {quantity}
-                    {photoName ? " · Personalized photo" : ""}
+                    {attachments?.length
+                      ? ` · ${attachments.length} image${attachments.length === 1 ? "" : "s"} selected`
+                      : photoName
+                        ? " · Personalized photo"
+                        : ""}
                   </div>
                 </div>
                 <div className="text-sm font-medium">

@@ -18,6 +18,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -64,6 +65,11 @@ const ProductSlugRoute = ProductSlugRouteImport.update({
   path: '/product/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/shop': typeof ShopRoute
   '/wishlist': typeof WishlistRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/shop': typeof ShopRoute
   '/wishlist': typeof WishlistRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/shop': typeof ShopRoute
   '/wishlist': typeof WishlistRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/shop'
     | '/wishlist'
+    | '/auth/callback'
     | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/shop'
     | '/wishlist'
+    | '/auth/callback'
     | '/product/$slug'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/shop'
     | '/wishlist'
+    | '/auth/callback'
     | '/product/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   ShopRoute: typeof ShopRoute
   WishlistRoute: typeof WishlistRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   ShopRoute: ShopRoute,
   WishlistRoute: WishlistRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport
