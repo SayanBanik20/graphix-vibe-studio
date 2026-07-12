@@ -11,12 +11,24 @@ import type { Session, User } from "@supabase/supabase-js";
 
 import { getAuthRedirectUrl, supabase } from "@/lib/supabase";
 
+type UserProfile = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  role: "customer" | "admin";
+  created_at: string;
+  updated_at: string;
+};
+
 type AuthResult = { error: string | null; session: Session | null; user: User | null };
 
 type AuthContextValue = {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   configured: boolean;
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -30,7 +42,17 @@ const notConfigured = { error: "Supabase is not configured yet.", session: null,
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(Boolean(supabase));
+
+  const loadProfile = useCallback(async (authUser: User | null) => {
+    if (!supabase || !authUser) {
+      setProfile(null);
+      return;
+    }
+    const { data } = await supabase.from("users").select("*").eq("id", authUser.id).single();
+    setProfile(data as UserProfile | null);
+  }, []);
 
   const ensureProfile = useCallback(async (authUser: User | null) => {
     if (!supabase || !authUser) return;
@@ -44,48 +66,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authUser.user_metadata?.display_name ??
         null,
       phone: authUser.user_metadata?.phone ?? null,
-      avatar_url: authUser.user_metadata?.avatar_url ?? null,
       updated_at: new Date().toISOString(),
     };
 
     const { error } = await supabase.from("users").upsert(profilePayload, { onConflict: "id" });
     if (error) {
       console.error("[auth] profile sync failed", error);
-      if (error.message.toLowerCase().includes("avatar_url")) {
-        await supabase.from("users").upsert(
-          {
-            id: authUser.id,
-            email: authUser.email ?? "",
-            full_name:
-              authUser.user_metadata?.full_name ??
-              authUser.user_metadata?.name ??
-              authUser.user_metadata?.display_name ??
-              null,
-            phone: authUser.user_metadata?.phone ?? null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" },
-        );
-      }
     }
-  }, []);
+    await loadProfile(authUser);
+  }, [loadProfile]);
 
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(async ({ data }) => {
       const nextUser = data.session?.user ?? null;
       setUser(nextUser);
-      if (nextUser) await ensureProfile(nextUser);
+      if (nextUser) {
+        await ensureProfile(nextUser);
+      } else {
+        setProfile(null);
+      }
       setLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const nextUser = session?.user ?? null;
       setUser(nextUser);
-      if (nextUser) await ensureProfile(nextUser);
+      if (nextUser) {
+        await ensureProfile(nextUser);
+      } else {
+        setProfile(null);
+      }
       setLoading(false);
     });
     return () => data.subscription.unsubscribe();
-  }, [ensureProfile]);
+  }, [ensureProfile, loadProfile]);
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<AuthResult> => {
@@ -161,15 +175,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       user,
+      profile,
       loading,
       configured: Boolean(supabase),
+      isAdmin: profile?.role === "admin",
       signIn,
       signUp,
       signOut,
       resetPassword,
       signInWithGoogle,
     }),
-    [loading, signIn, signInWithGoogle, signOut, signUp, user, resetPassword],
+    [loading, signIn, signInWithGoogle, signOut, signUp, user, resetPassword, profile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
