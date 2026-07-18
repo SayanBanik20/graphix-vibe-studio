@@ -57,22 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const ensureProfile = useCallback(async (authUser: User | null) => {
     if (!supabase || !authUser) return;
 
-    const profilePayload = {
-      id: authUser.id,
-      email: authUser.email ?? "",
-      full_name:
-        authUser.user_metadata?.full_name ??
-        authUser.user_metadata?.name ??
-        authUser.user_metadata?.display_name ??
-        null,
-      phone: authUser.user_metadata?.phone ?? null,
-      updated_at: new Date().toISOString(),
-    };
+    // First, check if the user already exists
+    const { data: existingProfile } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", authUser.id)
+      .single();
 
-    const { error } = await supabase.from("users").upsert(profilePayload, { onConflict: "id" });
-    if (error) {
-      console.error("[auth] profile sync failed", error);
+    if (!existingProfile) {
+      // If no user exists, try to insert (only if we have permissions)
+      // We'll just rely on the database trigger instead of upserting here
+      // because the trigger already creates the profile on signup!
     }
+
     await loadProfile(authUser);
   }, [loadProfile]);
 

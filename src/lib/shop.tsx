@@ -96,8 +96,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       .eq("user_id", user.id)
       .then(({ data, error }) => {
         if (error || !active) return;
-        const slugs = (data as { products: { slug: string } | null }[])
-          .map((item) => item.products?.slug)
+        const slugs = (data as unknown as { products: { slug: string }[] | null }[])
+          .map((item) => item.products?.[0]?.slug)
           .filter((slug): slug is string => Boolean(slug));
         setWishlist(slugs);
       });

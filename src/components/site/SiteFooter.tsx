@@ -34,12 +34,12 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link to="/shop" className="hover:text-primary">
+              <Link to="/shop" search={{ q: "" }} className="hover:text-primary">
                 Shop all
               </Link>
             </li>
             <li>
-              <Link to="/shop" className="hover:text-primary">
+              <Link to="/shop" search={{ q: "" }} className="hover:text-primary">
                 Best sellers
               </Link>
             </li>

@@ -14,12 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 type Category = {
   id?: string;
   name: string;
   slug: string;
-  description?: string;
+  description?: string | null;
   sort_order: number;
   is_active: boolean;
 };
@@ -73,8 +74,12 @@ export function CategoryFormModal({
       }
     },
     onSuccess: () => {
+      toast.success("Category saved successfully!");
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       onClose();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to save category.");
     },
   });
 
@@ -92,7 +97,7 @@ export function CategoryFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{category ? "Edit Category" : "Add Category"}</DialogTitle>
           <DialogDescription>

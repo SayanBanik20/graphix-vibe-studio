@@ -8,6 +8,7 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { CategoryFormModal } from "@/components/admin/CategoryFormModal";
 import { DeleteConfirmModal } from "@/components/admin/DeleteConfirmModal";
+import { toast } from "sonner";
 
 type Category = {
   id: string;
@@ -44,9 +45,13 @@ function AdminCategoriesPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Category deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       setDeleteModalOpen(false);
       setSelectedCategory(undefined);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete category.");
     },
   });
 
@@ -59,7 +64,11 @@ function AdminCategoriesPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Category status updated!");
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update category status.");
     },
   });
 

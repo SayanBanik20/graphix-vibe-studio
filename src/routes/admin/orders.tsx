@@ -112,7 +112,7 @@ function AdminOrdersPage() {
                       </td>
                       <td className="py-4 text-right">
                         <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/admin/orders/${order.id}`}>
+                          <Link to="/admin/orders/$orderId" params={{ orderId: order.id }}>
                             <Eye className="w-4 h-4 mr-2" />
                             View
                           </Link>

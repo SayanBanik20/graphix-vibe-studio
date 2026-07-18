@@ -9,20 +9,29 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { ProductFormModal } from "@/components/admin/ProductFormModal";
 import { DeleteConfirmModal } from "@/components/admin/DeleteConfirmModal";
+import { toast } from "sonner";
 
 type Product = {
   id: string;
   name: string;
   slug: string;
+  tagline: string | null;
   description: string;
   price_inr: number;
   compare_at_price_inr: number | null;
+  sku: string | null;
   main_image_url: string | null;
+  category_id: string | null;
+  details: any[];
+  requires_photo: boolean;
+  min_photo_count: number;
+  max_photo_count: number;
+  photo_upload_label: string | null;
+  photo_upload_description: string | null;
   is_active: boolean;
   is_featured: boolean;
-  requires_photo: boolean;
-  sku: string | null;
   created_at: string;
+  updated_at: string;
 };
 
 type Category = {
@@ -67,9 +76,13 @@ function AdminProductsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Product deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       setDeleteModalOpen(false);
       setSelectedProduct(undefined);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete product.");
     },
   });
 
@@ -90,7 +103,11 @@ function AdminProductsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Product status updated!");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update product status.");
     },
   });
 

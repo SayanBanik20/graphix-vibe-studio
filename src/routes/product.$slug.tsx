@@ -72,6 +72,7 @@ export const Route = createFileRoute("/product/$slug")({
       </p>
       <Link
         to="/shop"
+        search={{ q: "" }}
         className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm text-background"
       >
         Back to shop <ArrowRight className="h-4 w-4" />
@@ -269,7 +270,7 @@ function ProductPage() {
           Home
         </Link>
         <span className="mx-2">/</span>
-        <Link to="/shop" className="hover:text-foreground">
+        <Link to="/shop" search={{ q: "" }} className="hover:text-foreground">
           Shop
         </Link>
         <span className="mx-2">/</span>
@@ -554,7 +555,7 @@ function ProductPage() {
       <section className="site-container py-16">
         <div className="flex items-end justify-between">
           <h2 className="font-display text-3xl md:text-4xl">You may also love</h2>
-          <Link to="/shop" className="text-sm font-medium hover:text-primary">
+          <Link to="/shop" search={{ q: "" }} className="text-sm font-medium hover:text-primary">
             All pieces →
           </Link>
         </div>

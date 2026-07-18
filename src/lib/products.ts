@@ -36,7 +36,7 @@ type ProductRow = {
   max_photo_count?: number | null;
   photo_upload_label?: string | null;
   photo_upload_description?: string | null;
-  categories: { name: string } | null;
+  categories: { name: string }[] | null;
 };
 
 function toDetails(value: unknown): string[] {
@@ -53,7 +53,7 @@ function toProduct(row: ProductRow): Product {
     tagline: row.tagline ?? "Made with care",
     price: row.price_inr,
     compareAt: row.compare_at_price_inr ?? undefined,
-    category: row.categories?.name ?? "Collection",
+    category: row.categories?.[0]?.name ?? "Collection",
     image: row.main_image_url ?? "/favicon.ico",
     description: row.description,
     details: toDetails(row.details),
@@ -144,7 +144,7 @@ export async function getProducts(): Promise<Product[]> {
   const { data, error } = await fetchProductsWithFallback(productFields);
 
   if (error) throw error;
-  const products = (data as ProductRow[]).map(toProduct);
+  const products = ((data ?? []) as unknown as ProductRow[]).map(toProduct);
   return hydrateProductReviews(products);
 }
 
@@ -153,6 +153,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
   if (error) throw error;
   if (!data) return null;
-  const [product] = await hydrateProductReviews([toProduct(data as ProductRow)]);
+  const [product] = await hydrateProductReviews([toProduct(data as unknown as ProductRow)]);
   return product ?? null;
 }

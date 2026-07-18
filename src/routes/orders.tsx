@@ -93,36 +93,39 @@ function OrderHistoryPage() {
       return;
     }
 
+    const currentUser = user;
+    const client = supabase;
+
     let active = true;
     async function loadAccountData() {
       setLoading(true);
       setStatus(null);
       const [profileResponse, addressResponse, wishlistResponse, ordersResponse] =
         await Promise.all([
-          supabase
+          client
             .from("users")
             .select("id, email, full_name, phone, avatar_url, created_at, updated_at")
-            .eq("id", user.id)
+            .eq("id", currentUser.id)
             .maybeSingle(),
-          supabase
+          client
             .from("addresses")
             .select(
               "id, recipient_name, phone, line1, line2, city, state, postal_code, country_code, is_default",
             )
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .order("is_default", { ascending: false })
             .order("created_at", { ascending: false }),
-          supabase
+          client
             .from("wishlist")
             .select("product_id, products(id, slug, name, price_inr, main_image_url)")
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .order("created_at", { ascending: false }),
-          supabase
+          client
             .from("orders")
             .select(
               "id, order_number, status, total_inr, created_at, payment_provider, payment_reference, order_items(id, product_name, quantity, unit_price_inr)",
             )
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .order("created_at", { ascending: false }),
         ]);
 
@@ -169,16 +172,14 @@ function OrderHistoryPage() {
     setStatus(null);
     const { data, error } = await supabase
       .from("users")
-      .upsert(
+      .update(
         {
-          id: user.id,
-          email: user.email ?? "",
           full_name: profileForm.fullName.trim() || null,
           phone: profileForm.phone.trim() || null,
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" },
+        }
       )
+      .eq("id", user.id)
       .select("id, email, full_name, phone, avatar_url, created_at, updated_at")
       .single();
     if (error) {

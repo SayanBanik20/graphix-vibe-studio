@@ -126,6 +126,7 @@ function Home() {
             <div className="mt-10 flex flex-wrap gap-3">
               <Link
                 to="/shop"
+                search={{ q: "" }}
                 className="group inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
               >
                 Explore the collection
@@ -202,6 +203,7 @@ function Home() {
           </div>
           <Link
             to="/shop"
+            search={{ q: "" }}
             className="hidden shrink-0 items-center gap-2 text-sm font-medium hover:text-primary md:inline-flex"
           >
             View all <ArrowRight className="h-4 w-4" />

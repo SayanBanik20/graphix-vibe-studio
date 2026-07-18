@@ -144,7 +144,7 @@ export function SiteHeader() {
           <button
             type="button"
             aria-label="Search"
-            onClick={() => navigate({ to: "/shop" })}
+            onClick={() => navigate({ to: "/shop", search: { q: "" } })}
             className="rounded-full p-2 text-foreground/70 transition-colors hover:bg-muted hover:text-foreground md:hidden"
           >
             <Search className="h-5 w-5" />

@@ -17,6 +17,7 @@ import { SiteFooter } from "../components/site/SiteFooter";
 import { LoginDialog } from "../components/site/LoginDialog";
 import { ShopProvider } from "../lib/shop";
 import { AuthProvider } from "../lib/auth";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,7 @@ function RootComponent() {
             </main>
             {!isAdminRoute && <SiteFooter />}
             <LoginDialog />
+            <Toaster />
           </div>
         </ShopProvider>
       </AuthProvider>

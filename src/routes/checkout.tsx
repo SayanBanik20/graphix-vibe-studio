@@ -117,6 +117,7 @@ function CheckoutPage() {
         <h1 className="mt-6 font-display text-4xl">Your bag is empty.</h1>
         <Link
           to="/shop"
+          search={{ q: "" }}
           className="mt-8 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background"
         >
           Browse the shop

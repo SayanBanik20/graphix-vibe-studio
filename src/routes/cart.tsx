@@ -9,21 +9,6 @@ export const Route = createFileRoute("/cart")({ loader: () => getProducts(), com
 function CartPage() {
   const { cart, isSignedIn, openLogin, removeFromCart, updateCartQuantity } = useShop();
   const products = Route.useLoaderData();
-  if (!isSignedIn) {
-    return (
-      <section className="mx-auto max-w-2xl px-6 py-28 text-center">
-        <ShoppingBag className="mx-auto h-10 w-10 text-primary" />
-        <h1 className="mt-6 font-display text-4xl">Your bag is protected.</h1>
-        <p className="mt-3 text-muted-foreground">Sign in to view and continue with your order.</p>
-        <button
-          onClick={() => openLogin()}
-          className="mt-8 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background"
-        >
-          Sign in to view bag
-        </button>
-      </section>
-    );
-  }
   const lines = cart.flatMap((line) => {
     const product = products.find((item) => item.slug === line.slug);
     return product ? [{ ...line, product }] : [];
@@ -40,6 +25,7 @@ function CartPage() {
           <p className="mt-4 text-muted-foreground">Your bag is empty.</p>
           <Link
             to="/shop"
+            search={{ q: "" }}
             className="mt-6 inline-block rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background"
           >
             Browse the shop
