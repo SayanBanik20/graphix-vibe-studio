@@ -8,10 +8,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "../components/site/SiteHeader";
 import { SiteFooter } from "../components/site/SiteFooter";
 import { LoginDialog } from "../components/site/LoginDialog";
@@ -41,10 +40,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
   return (
     <div className="flex min-h-[70vh] items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -77,24 +72,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Graphix Vibe — Premium Personalized Gifts & Brand Design Studio" },
+      { title: "Graphix Vibe" },
       {
         name: "description",
         content:
-          "Mumbai-based creative studio for personalized gifts, branding, and print. Handcrafted keepsakes and identity systems by Manasvi Goklani.",
+          "Graphix Vibe creates premium personalized gifts, photo frames, Spotify plaques, customized products, and creative branding solutions.",
       },
       { name: "author", content: "Graphix Vibe" },
-      { property: "og:title", content: "Graphix Vibe — Premium Personalized Gifts & Brand Design" },
+      { property: "og:title", content: "Graphix Vibe — Personalized Gifts & Creative Studio" },
       {
         property: "og:description",
-        content: "Handcrafted keepsakes, personalized gifts and brand identities from Mumbai.",
+        content: "Graphix Vibe creates premium personalized gifts, photo frames, Spotify plaques, customized products, and creative branding solutions.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/logo.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Graphix Vibe — Personalized Gifts & Creative Studio" },
+      { name: "twitter:description", content: "Graphix Vibe creates premium personalized gifts, photo frames, Spotify plaques, customized products, and creative branding solutions." },
+      { name: "twitter:image", content: "/logo.jpg" },
+      { name: "theme-color", content: "#000000" },
+      { name: "application-name", content: "Graphix Vibe" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logo.jpg", type: "image/jpeg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
