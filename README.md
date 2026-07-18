@@ -275,7 +275,8 @@ https://github.com/SayanBanik20
 B.Tech Student • Full Stack Web Developer
 
 GitHub:
-https://github.com/SuraviHaldare20
+https://github.com/SuraviHaldar20
+
 ---
 
 # ⭐ Support
