@@ -285,6 +285,21 @@ If you found this project useful, consider giving it a ⭐ on GitHub.
 
 ---
 
+# 🌐 Live Demo
+
+🚧 **Coming Soon**
+
+The project is currently under development and deployment.
+
+Once deployed, the links below will be updated.
+
+**Client Website:**  
+https://your-domain.com
+
+**Admin Dashboard:**  
+https://your-domain.com/admin
+
+---
 <p align="center">
 Made with ❤️ by <strong>Sayan Banik & Suravi Haldar</strong>
 </p>
