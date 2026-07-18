@@ -270,6 +270,12 @@ B.Tech Student • Full Stack Web Developer
 GitHub:
 https://github.com/SayanBanik20
 
+**Suravi Haldar**
+
+B.Tech Student • Full Stack Web Developer
+
+GitHub:
+https://github.com/SuraviHaldare20
 ---
 
 # ⭐ Support
