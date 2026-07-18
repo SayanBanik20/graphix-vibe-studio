@@ -279,5 +279,5 @@ If you found this project useful, consider giving it a ⭐ on GitHub.
 ---
 
 <p align="center">
-Made with ❤️ by <strong>Sayan Banik</strong>
+Made with ❤️ by <strong>Sayan Banik & Suravi Haldar</strong>
 </p>
