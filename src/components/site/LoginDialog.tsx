@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from "react";
 import { Eye, EyeOff, LockKeyhole, Mail, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { useShop } from "@/lib/shop";
 import { useAuth } from "@/lib/auth";
 
 export function LoginDialog() {
   const { closeLogin, completeLogin, loginOpen } = useShop();
-  const { resetPassword, signIn, signInWithGoogle, signUp } = useAuth();
+  const { authRequestPending, resetPassword, signIn, signInWithGoogle, signUp } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,9 +19,10 @@ export function LoginDialog() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
-    const { error } = await signIn(email, password);
+    const { error, profile } = await signIn(email, password);
     if (error) return setMessage(error);
     completeLogin();
+    navigate({ to: profile?.role === "admin" ? "/admin" : "/" });
   }
 
   async function register() {
@@ -61,8 +64,11 @@ export function LoginDialog() {
         <p className="mt-1 text-muted-foreground">Sign in to save favorites and place orders.</p>
         <button
           type="button"
+          disabled={authRequestPending}
           onClick={() => {
-            void signInWithGoogle();
+            void signInWithGoogle().then(({ error }) => {
+              if (error) setMessage(error);
+            });
           }}
           className="mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-foreground px-5 py-3.5 text-sm font-medium text-background hover:opacity-90"
         >
@@ -112,6 +118,7 @@ export function LoginDialog() {
         </label>
         <button
           type="button"
+          disabled={authRequestPending}
           onClick={() => {
             void forgotPassword();
           }}
@@ -124,13 +131,17 @@ export function LoginDialog() {
             {message}
           </p>
         )}
-        <button className="mt-7 w-full rounded-full bg-foreground px-5 py-3.5 font-medium text-background hover:opacity-90">
-          Sign in
+        <button
+          disabled={authRequestPending}
+          className="mt-7 w-full rounded-full bg-foreground px-5 py-3.5 font-medium text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {authRequestPending ? "Please wait…" : "Sign in"}
         </button>
         <p className="mt-5 text-center text-sm text-muted-foreground">
           New here?{" "}
           <button
             type="button"
+            disabled={authRequestPending}
             onClick={() => {
               void register();
             }}

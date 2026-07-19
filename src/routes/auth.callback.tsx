@@ -39,9 +39,25 @@ function AuthCallback() {
         }
       }
 
-      await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+      if (!user) {
+        navigate({ to: "/" });
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profileError || !profile) {
+        console.error("[auth] callback profile lookup failed", profileError);
+        navigate({ to: "/" });
+        return;
+      }
       console.info("[auth] callback success");
-      navigate({ to: "/" });
+      navigate({ to: profile.role === "admin" ? "/admin" : "/" });
     })();
   }, [navigate]);
 

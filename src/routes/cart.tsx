@@ -22,21 +22,21 @@ function CartPage() {
       {lines.length === 0 ? (
         <div className="mt-12 rounded-3xl border border-dashed border-border p-14 text-center">
           <ShoppingBag className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-4 text-muted-foreground">Your bag is empty.</p>
+          <p className="mt-4 text-muted-foreground">Your cart is empty.</p>
           <Link
             to="/shop"
             search={{ q: "" }}
             className="mt-6 inline-block rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background"
           >
-            Browse the shop
+            Continue Shopping
           </Link>
         </div>
       ) : (
         <div className="mt-10 rounded-3xl border border-border p-6 sm:p-8">
           <div className="space-y-5">
-            {lines.map(({ product, quantity, photoName, attachments }) => (
+            {lines.map(({ product, quantity, photoName, attachments, productId }) => (
               <div
-                key={`${product.slug}-${photoName ?? "standard"}`}
+                key={`${product.slug}-${productId ?? "standard"}-${photoName ?? "standard"}`}
                 className="flex items-center gap-4"
               >
                 <img src={product.image} alt="" className="h-20 w-20 rounded-xl object-cover" />
@@ -44,7 +44,9 @@ function CartPage() {
                   <div className="font-display text-lg">{product.name}</div>
                   <div className="mt-2 inline-flex items-center rounded-full border border-border">
                     <button
-                      onClick={() => updateCartQuantity(product.slug, photoName, quantity - 1)}
+                      onClick={() =>
+                        updateCartQuantity(product.slug, photoName, quantity - 1, productId)
+                      }
                       aria-label={`Decrease ${product.name} quantity`}
                       className="grid h-8 w-8 place-items-center rounded-full hover:bg-muted"
                     >
@@ -52,7 +54,9 @@ function CartPage() {
                     </button>
                     <span className="w-8 text-center text-sm font-medium">{quantity}</span>
                     <button
-                      onClick={() => updateCartQuantity(product.slug, photoName, quantity + 1)}
+                      onClick={() =>
+                        updateCartQuantity(product.slug, photoName, quantity + 1, productId)
+                      }
                       aria-label={`Increase ${product.name} quantity`}
                       className="grid h-8 w-8 place-items-center rounded-full hover:bg-muted"
                     >
@@ -72,7 +76,7 @@ function CartPage() {
                     ₹{(product.price * quantity).toLocaleString("en-IN")}
                   </div>
                   <button
-                    onClick={() => removeFromCart(product.slug, photoName)}
+                    onClick={() => removeFromCart(product.slug, photoName, productId)}
                     aria-label={`Remove ${product.name} from bag`}
                     className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
                   >
@@ -91,14 +95,14 @@ function CartPage() {
               to="/checkout"
               className="mt-6 block w-full rounded-full bg-foreground py-3.5 text-center text-sm font-medium text-background"
             >
-              Continue to checkout
+              Proceed to Checkout
             </Link>
           ) : (
             <button
               onClick={() => openLogin()}
               className="mt-6 w-full rounded-full bg-foreground py-3.5 text-sm font-medium text-background"
             >
-              Sign in to checkout
+              Sign in to Checkout
             </button>
           )}
         </div>

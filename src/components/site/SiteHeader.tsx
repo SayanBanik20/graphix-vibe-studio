@@ -4,6 +4,7 @@ import { Menu, X, ShoppingBag, Search, Heart, UserRound } from "lucide-react";
 import logo from "@/assets/graphix-vibe-logo.jpg";
 import { getProducts } from "@/lib/products";
 import { useShop } from "@/lib/shop";
+import { useAuth } from "@/lib/auth";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -15,10 +16,20 @@ const nav = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [products, setProducts] = useState<Array<{ slug: string; name: string; tagline: string; price: number; image: string; category: string }>>([]);
+  const [products, setProducts] = useState<
+    Array<{
+      slug: string;
+      name: string;
+      tagline: string;
+      price: number;
+      image: string;
+      category: string;
+    }>
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
-  const { cart, isSignedIn, openLogin, wishlist } = useShop();
+  const { cartItemCount, isSignedIn, openLogin, wishlist } = useShop();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     let active = true;
@@ -132,9 +143,13 @@ export function SiteHeader() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{product.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">{product.tagline}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {product.tagline}
+                        </div>
                       </div>
-                      <div className="text-sm font-medium">₹{product.price.toLocaleString("en-IN")}</div>
+                      <div className="text-sm font-medium">
+                        ₹{product.price.toLocaleString("en-IN")}
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -167,19 +182,28 @@ export function SiteHeader() {
             className="relative hidden rounded-full p-2 text-foreground/70 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
           >
             <ShoppingBag className="h-5 w-5" />
-            {cart.length > 0 && (
+            {cartItemCount > 0 && (
               <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
-                {cart.length}
+                {cartItemCount}
               </span>
             )}
           </Link>
           {isSignedIn ? (
-            <Link
-              to="/orders"
-              className="hidden items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 md:inline-flex"
-            >
-              <UserRound className="h-4 w-4" /> My account
-            </Link>
+            isAdmin ? (
+              <Link
+                to="/admin"
+                className="hidden items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 md:inline-flex"
+              >
+                <UserRound className="h-4 w-4" /> Admin dashboard
+              </Link>
+            ) : (
+              <Link
+                to="/orders"
+                className="hidden items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 md:inline-flex"
+              >
+                <UserRound className="h-4 w-4" /> My account
+              </Link>
+            )
           ) : (
             <button
               onClick={() => openLogin()}
@@ -212,13 +236,23 @@ export function SiteHeader() {
               </Link>
             ))}
             {isSignedIn ? (
-              <Link
-                to="/orders"
-                onClick={() => setOpen(false)}
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background"
-              >
-                <UserRound className="h-4 w-4" /> My account
-              </Link>
+              isAdmin ? (
+                <Link
+                  to="/admin"
+                  onClick={() => setOpen(false)}
+                  className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background"
+                >
+                  <UserRound className="h-4 w-4" /> Admin dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/orders"
+                  onClick={() => setOpen(false)}
+                  className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background"
+                >
+                  <UserRound className="h-4 w-4" /> My account
+                </Link>
+              )
             ) : (
               <button
                 onClick={() => {

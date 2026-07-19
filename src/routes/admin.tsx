@@ -1,6 +1,8 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAuth } from "@/lib/auth";
+import { useShop } from "@/lib/shop";
 
 export const Route = createFileRoute("/admin")({
   component: AdminRoute,
@@ -11,22 +13,21 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRoute() {
   const { loading, isAdmin, user } = useAuth();
+  const { openLogin } = useShop();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      openLogin();
+      navigate({ to: "/" });
+    } else if (!loading && !isAdmin) navigate({ to: "/" });
+  }, [isAdmin, loading, navigate, openLogin, user]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"></div>;
   }
 
-  if (!user || !isAdmin) {
-    return <div className="min-h-screen flex items-center justify-center text-center">
-      <div className="max-w-md">
-        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-zinc-500">You need admin privileges to access this page.</p>
-      </div>
-    </div>;
-  }
+  if (!user || !isAdmin) return null;
 
   return <AdminLayout />;
 }
